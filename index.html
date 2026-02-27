@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terminator LLM</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <!-- <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"> -->
+  <!-- <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;500;600;700" rel="stylesheet"> -->
+  <!-- <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700" rel="stylesheet"> -->
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700" rel="stylesheet">
+  <!-- <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700" rel="stylesheet"> -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script>
+    MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] } };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+</head>
+<body>
+
+<!-- ── Dark-mode toggle ── -->
+<label class="theme-switch" aria-label="Toggle dark mode">
+  <input type="checkbox" id="theme-toggle">
+  <span class="slider">
+    <i class="fa-solid fa-sun"></i>
+    <i class="fa-solid fa-moon"></i>
+  </span>
+</label>
+
+<div class="container">
+
+  <!-- ── Hero ── -->
+  <div class="hero">
+    <h1><span class="title-accent">Terminator</span>: Learning Optimal Exit Points for Early Stopping in Chain-of-Thought Reasoning</h1>
+
+    <div class="authors">
+      <a href="https://acnagle.com" target="_blank" rel="noopener">Alliot Nagle</a><sup>1</sup>,
+      <a href="https://jakhongir.me/" target="_blank" rel="noopener">Jakhongir Saydaliev</a><sup>2</sup>,
+      <a href="https://dhia680.github.io/" target="_blank" rel="noopener">Dhia Garbaya</a><sup>3</sup>
+      <a href="https://ashokvardhan.github.io/" target="_blank" rel="noopener">Ashok Vardhan Makkuva</a><sup>4</sup>
+      <a href="https://people.epfl.ch/michael.gastpar/?lang=en" target="_blank" rel="noopener">Michael Gastpar</a><sup>2</sup>
+      <a href="https://www.ece.utexas.edu/people/faculty/hyeji-kim" target="_blank" rel="noopener">Hyeji Kim</a><sup>1</sup>
+    </div>
+
+    <div class="affiliations">
+      <sup>1</sup>UT Austin &nbsp;&nbsp;
+      <sup>2</sup>EPFL &nbsp;&nbsp;
+      <sup>2</sup>ENS Paris-Saclay &nbsp;&nbsp;
+      <sup>4</sup>Télécom Paris &nbsp;&nbsp;
+    </div>
+
+    <div class="resource-links">
+        <!-- <a href="#" target="_blank" rel="noopener"><i class="fa-solid fa-file-pdf"></i> Paper</a> -->
+      <a href="#" target="_blank" rel="noopener"><img src="assets/arxiv.svg" alt="" class="icon icon-white"> arXiv</a>
+      <a href="#" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i> Code (coming soon!)</a>
+      <a href="#" target="_blank" rel="noopener"><i class="fa-solid fa-database"></i> Data (coming soon!)</a>
+      <a href="https://huggingface.co/collections/acnagle/terminator" target="_blank" rel="noopener"><img src="assets/hf-logo.svg" alt="" class="icon"> Models</a>
+    </div>
+  </div>
+
+  <!-- ── TL;DR ── -->
+  <div class="tldr">
+    <strong>TL;DR:</strong> Terminator is the state-of-the-art method for early LRM reasoning termination during online inference, without the need for LRM fine-tuning.
+  </div>
+
+  <!-- ── Teaser figure ── -->
+  <div class="teaser">
+    <img src="https://placehold.co/800x400?text=Teaser+Figure" alt="Teaser figure">
+    <div class="caption">Figure 1: A high-level overview of the proposed method.</div>
+  </div>
+
+  <!-- ── Section navigation ── -->
+  <nav id="section-nav" class="section-nav">
+    <a href="#method">Method</a>
+    <a href="#results">Key Results</a>
+    <a href="#additional">Additional Results</a>
+    <a href="#demo">Demo 🚀</a>
+    <a href="#citation">Citation</a>
+  </nav>
+
+  <!-- ── Abstract ── -->
+  <div class="abstract">
+    <h2>Abstract</h2>
+    <p>
+      Large Reasoning Models (LRMs) achieve impressive performance on complex reasoning tasks via Chain-of-Thought (CoT) reasoning, which enables them to generate intermediate thinking tokens before arriving at the final answer. However, LRMs often suffer from significant overthinking, spending excessive compute time even after the answer is generated early on. Prior work has identified the existence of an optimal reasoning length such that truncating reasoning at this point significantly shortens CoT outputs with virtually no change in performance. However, determining optimal CoT lengths for practical datasets is highly non-trivial as they are fully task and model-dependent. We precisely address this and design Terminator, an early-exit strategy for LRMs at inference to mitigate overthinking. The central idea underpinning Terminator is that the first arrival of an LRM's final answer is often predictable, and we leverage these first answer positions to create a novel dataset of optimal reasoning lengths to train Terminator. Powered by this approach, Terminator achieves significant reductions in CoT lengths of 14% – 55% on average across four challenging practical datasets: MATH-500, AIME 2025, HumanEval, and GPQA, whilst outperforming current state-of-the-art methods.
+    </p>
+  </div>
+
+  <!-- ── Method ── -->
+  <section id="method">
+    <h2>Method</h2>
+    <p>
+      Describe your method here. You can include figures, equations (via
+      an image or MathJax if you choose to add it later), and bullet points.
+    </p>
+
+    <div class="figure">
+      <img src="https://placehold.co/750x350?text=Method+Diagram" alt="Method diagram">
+      <div class="caption">Figure 2: Architecture of the proposed approach.</div>
+    </div>
+
+    <details>
+      <summary>Technical Details</summary>
+      <div class="details-content">
+        <p>
+          Expand on the finer points here. This section is collapsed by
+          default so readers can skip past it if they just want the high-level
+          overview.
+        </p>
+        <ul>
+          <li>Detail point one</li>
+          <li>Detail point two</li>
+          <li>Detail point three</li>
+        </ul>
+      </div>
+    </details>
+
+    <a href="#section-nav" class="back-to-nav">↑ Back to sections</a>
+  </section>
+
+  <!-- ── Key Results ── -->
+  <section id="results">
+    <h2>Key Results</h2>
+    <p>
+      Summarise your main experimental findings here.
+    </p>
+
+    <div class="figure">
+      <img src="https://placehold.co/750x350?text=Results+Table+or+Chart" alt="Key results">
+      <div class="caption">Figure 3: Main results comparing the proposed method against baselines.</div>
+    </div>
+
+    <details>
+      <summary>Ablation Studies</summary>
+      <div class="details-content">
+        <p>Present ablation results, additional tables, or analysis here.</p>
+      </div>
+    </details>
+
+    <a href="#section-nav" class="back-to-nav">↑ Back to sections</a>
+  </section>
+
+  <!-- ── Additional Results ── -->
+  <section id="additional">
+    <h2>Additional Results</h2>
+    <p>
+      Qualitative examples, visualisations, or supplementary experiments.
+    </p>
+
+    <details>
+      <summary>Example 1</summary>
+      <div class="details-content">
+        <p>Detailed example or visualisation.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Example 2</summary>
+      <div class="details-content">
+        <p>Another detailed example or visualisation.</p>
+      </div>
+    </details>
+
+    <a href="#section-nav" class="back-to-nav">↑ Back to sections</a>
+  </section>
+
+  <!-- ── Demo ── -->
+  <section id="demo">
+    <h2>Demo 🚀</h2>
+    <p>
+      Try Terminator yourself! We provide ready-to-run model packages on HuggingFace with a high-performance <a href="https://docs.vllm.ai/" target="_blank" rel="noopener">vLLM</a> server and a standalone inference script.
+    </p>
+
+    <h3>Available Models</h3>
+    <table class="demo-table">
+      <thead>
+        <tr>
+          <th>Model</th>
+          <th>Base Model</th>
+          <th>Min. VRAM</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><a href="https://huggingface.co/acnagle/Terminator-Qwen3-8B" target="_blank" rel="noopener">Terminator-Qwen3-8B</a></td>
+          <td><a href="https://huggingface.co/Qwen/Qwen3-8B" target="_blank" rel="noopener">Qwen3-8B</a></td>
+          <td>~24 GB</td>
+        </tr>
+        <tr>
+          <td><a href="https://huggingface.co/acnagle/Terminator-Qwen3-14B" target="_blank" rel="noopener">Terminator-Qwen3-14B</a></td>
+          <td><a href="https://huggingface.co/Qwen/Qwen3-14B" target="_blank" rel="noopener">Qwen3-14B</a></td>
+          <td>~40 GB</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Quick Start</h3>
+    <pre><code><span class="code-comment"># Clone a model repo (requires Git LFS: https://git-lfs.com)</span>
+git lfs install
+git clone https://huggingface.co/acnagle/Terminator-Qwen3-8B
+cd Terminator-Qwen3-8B
+
+<span class="code-comment"># Automated setup (creates conda env, installs vLLM, downloads base model)</span>
+./setup.sh
+
+<span class="code-comment"># Start the vLLM server</span>
+./start_server.sh
+
+<span class="code-comment"># In another terminal, chat with the model</span>
+python client.py --interactive</code></pre>
+
+    <details>
+      <summary>Standalone Inference (No Server)</summary>
+      <div class="details-content">
+        <p>
+          For quick testing without spinning up a vLLM server, use the HuggingFace-native inference script included in each model repo:
+        </p>
+        <pre><code>python inference_hf.py --prompt "What is the sum of the first 100 natural numbers?"</code></pre>
+        <p>
+          Thinking content is streamed in dimmed text; the final answer is shown in bold. For best performance, the vLLM server is recommended.
+        </p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Using the API Directly</summary>
+      <div class="details-content">
+        <p>
+          The vLLM server exposes an OpenAI-compatible API, so you can use any OpenAI client library:
+        </p>
+        <pre><code><span class="code-keyword">from</span> openai <span class="code-keyword">import</span> OpenAI
+
+client = OpenAI(base_url=<span class="code-string">"http://localhost:8000/v1"</span>, api_key=<span class="code-string">"EMPTY"</span>)
+
+response = client.chat.completions.create(
+    model=<span class="code-string">"Terminator-Qwen3-8B"</span>,
+    messages=[{<span class="code-string">"role"</span>: <span class="code-string">"user"</span>, <span class="code-string">"content"</span>: <span class="code-string">"What is 25 * 37?"</span>}],
+    temperature=<span class="code-number">0.6</span>,
+    extra_body={<span class="code-string">"chat_template_kwargs"</span>: {<span class="code-string">"enable_thinking"</span>: <span class="code-keyword">True</span>}},
+)
+
+<span class="code-comment"># Thinking content (chain-of-thought)</span>
+print(response.choices[<span class="code-number">0</span>].message.reasoning)
+
+<span class="code-comment"># Final answer</span>
+print(response.choices[<span class="code-number">0</span>].message.content)</code></pre>
+      </div>
+    </details>
+
+    <a href="#section-nav" class="back-to-nav">↑ Back to sections</a>
+  </section>
+
+  <!-- ── Citation ── -->
+  <section id="citation" class="bibtex">
+    <h2>Citation</h2>
+    <pre>@article{authorlastname2025shorttitle,
+  title   = {Your Paper Title Goes Here},
+  author  = {One, Author and Two, Author and Three, Author},
+  journal = {arXiv preprint arXiv:XXXX.XXXXX},
+  year    = {2025}
+}</pre>
+    <a href="#section-nav" class="back-to-nav">↑ Back to sections</a>
+  </section>
+
+  <!-- ── Footer ── -->
+  <footer>
+    <p>Acknowledgements go here.</p>
+  </footer>
+
+</div>
+
+<script>
+  const toggle = document.getElementById('theme-toggle');
+  if (localStorage.getItem('theme') !== 'light') { document.body.classList.add('dark'); toggle.checked = true; }
+  toggle.addEventListener('change', () => { document.body.classList.toggle('dark', toggle.checked); localStorage.setItem('theme', toggle.checked ? 'dark' : 'light'); });
+</script>
+</body>
+</html>
