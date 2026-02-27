@@ -17,6 +17,7 @@ body {
   background: #fdfdfd;
   line-height: 1.7;
   -webkit-font-smoothing: antialiased;
+  transition: background 0.5s, color 0.5s;
 }
 
 /* ── Layout ── */
@@ -50,6 +51,7 @@ body {
   font-size: 1.05rem;
   color: #333;
   margin-bottom: 0.4rem;
+  transition: color 0.5s;
 }
 
 .authors a {
@@ -62,6 +64,7 @@ body {
   font-size: 0.92rem;
   color: #555;
   margin-bottom: 1.5rem;
+  transition: color 0.5s;
 }
 
 sup {
@@ -89,7 +92,7 @@ sup {
   background: #1a1a2e;
   border-radius: 6px;
   text-decoration: none;
-  transition: background 0.2s;
+  transition: background 0.5s, color 0.5s;
 }
 .resource-links a:hover { background: #dc2626; }
 .resource-links a i { font-size: 1rem; }
@@ -106,6 +109,7 @@ sup {
   background: #f3f4f6;
   border-left: 3px solid #dc2626;
   border-radius: 6px;
+  transition: background 0.5s, color 0.5s, border-left-color 0.5s;
 }
 
 body.dark .tldr {
@@ -124,12 +128,14 @@ body.dark .tldr {
   max-width: 100%;
   border-radius: 10px;
   border: 2px solid #e5e7eb;
+  transition: border-color 0.5s;
 }
 
 .teaser .caption {
   font-size: 0.88rem;
   color: #666;
   margin-top: 0.5rem;
+  transition: color 0.5s;
 }
 
 /* ── Abstract ── */
@@ -156,6 +162,7 @@ body.dark .tldr {
   margin-bottom: 2rem;
   border-top: 1px solid #e5e7eb;
   border-bottom: 1px solid #e5e7eb;
+  transition: border-color 0.5s;
 }
 
 .section-nav a {
@@ -170,7 +177,10 @@ body.dark .tldr {
   border: 1px solid #d1d5db;
   border-radius: 20px;
   text-decoration: none;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+body.theme-transition .section-nav a {
+  transition-duration: 0.5s;
 }
 .section-nav a:hover {
   background: #dc2626;
@@ -188,6 +198,7 @@ section h2 {
   margin-bottom: 0.8rem;
   padding-bottom: 0.3rem;
   border-bottom: 2px solid #e5e7eb;
+  transition: border-bottom-color 0.5s;
 }
 
 section a:not(.back-to-nav) {
@@ -216,6 +227,7 @@ details {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   overflow: hidden;
+  transition: border-color 0.5s;
 }
 
 details summary {
@@ -223,7 +235,7 @@ details summary {
   font-weight: 600;
   cursor: pointer;
   background: #f9fafb;
-  transition: background 0.2s;
+  transition: background 0.5s;
   list-style: none;
 }
 
@@ -274,6 +286,7 @@ details .details-content {
   font-size: 0.88rem;
   color: #666;
   margin-top: 0.5rem;
+  transition: color 0.5s;
 }
 
 /* ── Code blocks ── */
@@ -316,12 +329,14 @@ section:not(.bibtex) pre code {
   padding: 0.55rem 0.8rem;
   text-align: left;
   border-bottom: 1px solid #e5e7eb;
+  transition: border-bottom-color 0.5s;
 }
 
 .demo-table th {
   font-weight: 600;
   background: #f3f4f6;
   border-bottom: 2px solid #d1d5db;
+  transition: background 0.5s, border-bottom-color 0.5s;
 }
 
 .demo-table a {
@@ -365,6 +380,7 @@ section h3 {
   overflow-x: auto;
   white-space: pre-wrap;
   word-break: break-all;
+  transition: background 0.5s, border-color 0.5s, color 0.5s;
 }
 
 /* ── Footer ── */
@@ -374,6 +390,7 @@ footer {
   font-size: 0.82rem;
   color: #999;
   border-top: 1px solid #e5e7eb;
+  transition: color 0.5s, border-top-color 0.5s;
 }
 
 /* ── Theme toggle switch ── */
@@ -395,7 +412,7 @@ footer {
   background: #e5e7eb;
   border-radius: 1rem;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: background 0.5s;
   box-shadow: 0 1px 4px rgba(0,0,0,0.08);
 }
 
@@ -409,7 +426,7 @@ footer {
   height: 1.3rem;
   background: #fff;
   border-radius: 50%;
-  transition: transform 0.3s;
+  transition: transform 0.5s;
   box-shadow: 0 1px 3px rgba(0,0,0,0.15);
 }
 
@@ -422,16 +439,16 @@ footer {
   line-height: 1;
 }
 .theme-switch .slider .fa-sun {
-  left: 0.38rem;
+  right: 0.38rem;
   color: #f59e0b;
-  opacity: 0;
-  transition: opacity 0.3s;
+  opacity: 1;
+  transition: opacity 0.5s;
 }
 .theme-switch .slider .fa-moon {
-  right: 0.38rem;
+  left: 0.38rem;
   color: #6b7280;
-  opacity: 1;
-  transition: opacity 0.3s;
+  opacity: 0;
+  transition: opacity 0.5s;
 }
 
 /* checked state */
@@ -441,8 +458,8 @@ footer {
 .theme-switch input:checked + .slider::after {
   transform: translateX(1.5rem);
 }
-.theme-switch input:checked + .slider .fa-sun  { opacity: 1; }
-.theme-switch input:checked + .slider .fa-moon { opacity: 0; }
+.theme-switch input:checked + .slider .fa-sun  { opacity: 0; }
+.theme-switch input:checked + .slider .fa-moon { opacity: 1; }
 
 /* ── Dark mode ── */
 body.dark {
