@@ -406,7 +406,7 @@ body.dark .demo-table a {
 }
 
 .results-table .method-ours {
-  background: #dbeafe;
+  background: #fee2e2;
   transition: background 0.5s;
 }
 
@@ -429,7 +429,7 @@ body.dark .results-table .model-header td {
 }
 
 body.dark .results-table .method-ours {
-  background: #1e3a5f;
+  background: #4a1a1a;
 }
 
 /* ── Section h3 ── */

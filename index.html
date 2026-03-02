@@ -194,6 +194,16 @@
       </table>
     </div>
 
+    <a href="#section-nav" class="back-to-nav">↑ Back to sections</a>
+  </section>
+
+  <!-- ── Additional Results ── -->
+  <section id="additional">
+    <h2>Additional Results</h2>
+    <p>
+      Below are some additional results that we wish to highlight.
+    </p>
+
     <details>
       <summary>Early Answer Detection Signals</summary>
       <div class="details-content">
@@ -221,27 +231,31 @@
       </div>
     </details>
 
-    <a href="#section-nav" class="back-to-nav">↑ Back to sections</a>
-  </section>
-
-  <!-- ── Additional Results ── -->
-  <section id="additional">
-    <h2>Additional Results</h2>
-    <p>
-      Qualitative examples, visualisations, or supplementary experiments.
-    </p>
-
     <details>
-      <summary>Example 1</summary>
+      <summary>Example 1: MATH-500</summary>
       <div class="details-content">
-        <p>Detailed example or visualisation.</p>
+        <div class="figure">
+          <img src="assets/individual_samples_2x2_math-500.png" alt="Predicted probabilities for four MATH-500 samples">
+          <div class="caption"><strong>Predicted Probabilities for MATH-500.</strong> Terminator's predicted probability stream for early-exiting on four randomly chosen samples from MATH-500.</div>
+        </div>
+        <div class="figure">
+          <img src="assets/cot_math_sample_77.png" alt="Predicted probabilities for a single MATH-500 sample">
+          <div class="caption"><strong>Predicted Probabilities for MATH-500.</strong> Terminator's predicted probabilities for early-exit on a randomly chosen sample from MATH-500. The beginning and the end are truncated for better visibility.</div>
+        </div>
       </div>
     </details>
 
     <details>
-      <summary>Example 2</summary>
+      <summary>Example 2: AIME 2025</summary>
       <div class="details-content">
-        <p>Another detailed example or visualisation.</p>
+        <div class="figure">
+          <img src="assets/individual_samples_2x2_aime_2025.png" alt="Predicted probabilities for four AIME 2025 samples">
+          <div class="caption"><strong>Predicted Probabilities for AIME 2025.</strong> Terminator's predicted probability stream for early-exiting on four randomly chosen samples from AIME 2025.</div>
+        </div>
+        <div class="figure">
+          <img src="assets/cot_aime_sample_508.png" alt="Predicted probabilities for a single AIME 2025 sample">
+          <div class="caption"><strong>Predicted Probabilities for AIME 2025.</strong> Terminator's predicted probabilities for early-exit on a randomly chosen sample from AIME 2025. The beginning and the end are truncated for better visibility. Here we are showing that Terminator's predicted probabilities local to its chosen exit position in a case where Terminator struggles to find an appropriate exit position.</div>
+        </div>
       </div>
     </details>
 
