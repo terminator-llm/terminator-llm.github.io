@@ -61,13 +61,16 @@
 
   <!-- ── TL;DR ── -->
   <div class="tldr">
-    <strong>TL;DR:</strong> Terminator is the state-of-the-art method for early LRM reasoning termination during online inference, without the need for LRM fine-tuning.
+    <strong>TL;DR:</strong> Terminator is a state-of-the-art method for early LRM reasoning termination during online inference, without the need for LRM fine-tuning.
   </div>
 
   <!-- ── Teaser figure ── -->
   <div class="teaser">
-    <img src="https://placehold.co/800x400?text=Teaser+Figure" alt="Teaser figure">
-    <div class="caption">Figure 1: A high-level overview of the proposed method.</div>
+    <video autoplay loop muted playsinline preload="metadata">
+      <source src="assets/terminator_compressed.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+    <div class="caption">Figure 1: Side-by-side comparison of <strong>Terminator-Qwen3-8B</strong> (left) vs. <strong>vanilla Qwen3-8B</strong> (right) on the following MATH-500 question: <br>"Define $p = \sum_{k=1}^\infty \frac{1}{k^2}$ and $q = \sum_{k=1}^\infty \frac{1}{k^3}.$ Find a way to write $\sum_{j=1}^\infty \sum_{k=1}^\infty \frac{1}{(j+k)^3}$ in terms of $p$ and $q.$"</div>
   </div>
 
   <!-- ── Section navigation ── -->
@@ -91,27 +94,40 @@
   <section id="method">
     <h2>Method</h2>
     <p>
-      Describe your method here. You can include figures, equations (via
-      an image or MathJax if you choose to add it later), and bullet points.
+      Terminator is a single-layer transformer that sits on top of a base LRM and injects the end-of-thought token when the LRM has generated its final answer. Terminator accepts the final hidden-states of the LRM as input, and predicts a 0 if the answer has not been generated yet, or 1 if it has.
     </p>
 
     <div class="figure">
-      <img src="https://placehold.co/750x350?text=Method+Diagram" alt="Method diagram">
-      <div class="caption">Figure 2: Architecture of the proposed approach.</div>
+      <img src="assets/terminator.svg" alt="Method diagram">
+      <div class="caption">Figure 2: Terminator predicts when the LRM has generated its final answer.</div>
     </div>
 
     <details>
-      <summary>Technical Details</summary>
+      <summary>Training Details</summary>
       <div class="details-content">
         <p>
-          Expand on the finer points here. This section is collapsed by
-          default so readers can skip past it if they just want the high-level
-          overview.
+          Terminator is trained to predict the exact position of the first occurrence of the final answer of an LRM's CoT during online inference. An important challenge we overcome is to identify the exact position of the earliest final answer occurrence for a given CoT. Our training dataset is curated using the following pipeline for robust extraction of the answer position:
+        </p>
+        <ol>
+          <li>Collect CoTs from the LRM</li>
+          <li>For each CoT, we use a separate LRM to analyze the CoT for the final answer and extract its exact position</li>
+          <li>Given the token position index of the answer, we construct the labels: set all positions before the answer to 0 and set to 1 after</li>
+        </ol>
+        <p>
+          Finally, Terminator is trained with binary cross-entropy loss over each position in the CoT. By using the above training strategy, Terminator learns to exit when the LRM has generated the final answer it will eventually commit to.
+        </p>
+      </div>
+    </details>
+    <details>
+      <summary>Inference Details</summary>
+      <div class="details-content">
+        <p>
+          At inference time, Terminator makes a prediction for each generated token by the LRM. Terminator forces the end-of-thought token to terminate reasoning early by using the following rules:
         </p>
         <ul>
-          <li>Detail point one</li>
-          <li>Detail point two</li>
-          <li>Detail point three</li>
+          <li>Predict 1 if the predicted confidence is above a fixed threshold (set to 0.7 by default)</li>
+          <li>Count the number of predicted 1s in a sliding window of the most recent predictions (the window size is 10 by default)</li>
+          <li>If the majority (>5 if the window size is 10) of predictions are 1, then the CoT is terminated</li>
         </ul>
       </div>
     </details>
@@ -123,18 +139,85 @@
   <section id="results">
     <h2>Key Results</h2>
     <p>
-      Summarise your main experimental findings here.
+    Table 1 shows that Terminator achieves competitive performance compared to existing methods. We provide results for two additional models, <strong>Ministral-3-8B-Reasoning-2512</strong> and <strong>Ministral-3-14B-Reasoning-2512</strong>, in the table in our paper.
     </p>
+    <div class="caption">
+      <strong>Table 1: Performance of Terminator and Baselines.</strong>
+      ↑ = higher is better, ↓ = lower is better.
+      CR = compression rate (mean per-sample). Tok = mean tokens per sample.
+      <strong>Bold</strong> and <u>underlined</u> values highlight the best and second-best early exit methods.
+    </div>
 
-    <div class="figure">
-      <img src="https://placehold.co/750x350?text=Results+Table+or+Chart" alt="Key results">
-      <div class="caption">Figure 3: Main results comparing the proposed method against baselines.</div>
+    <div class="table-scroll">
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th rowspan="3">Method</th>
+            <th colspan="6">Math</th>
+            <th colspan="3">Coding</th>
+            <th colspan="3">Science</th>
+            <th colspan="2" rowspan="2">Overall</th>
+          </tr>
+          <tr>
+            <th colspan="3">MATH-500</th>
+            <th colspan="3">AIME 2025</th>
+            <th colspan="3">HumanEval</th>
+            <th colspan="3">GPQA</th>
+          </tr>
+          <tr>
+            <th>Acc↑</th><th>Tok↓</th><th>CR↓</th>
+            <th>Acc↑</th><th>Tok↓</th><th>CR↓</th>
+            <th>Acc↑</th><th>Tok↓</th><th>CR↓</th>
+            <th>Acc↑</th><th>Tok↓</th><th>CR↓</th>
+            <th>Acc↑</th><th>CR↓</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Qwen3-8B -->
+          <tr class="model-header"><td colspan="15">Qwen3-8B</td></tr>
+          <tr><td>Vanilla</td><td>91.1%</td><td>5,037</td><td>100%</td><td>74.4%</td><td>14,499</td><td>100%</td><td>86.4%</td><td>3,792</td><td>100%</td><td>57.6%</td><td>8,594</td><td>100%</td><td>77.4%</td><td>100%</td></tr>
+          <tr><td>NoThinking</td><td>80.7%</td><td>809</td><td>16.1%</td><td>22.0%</td><td>2,355</td><td>18.6%</td><td>78.5%</td><td>353</td><td>11.8%</td><td>30.7%</td><td>1,204</td><td>15.8%</td><td>53.0%</td><td>15.6%</td></tr>
+          <tr><td>DEER</td><td>79.9%</td><td>2,602</td><td>52.0%</td><td>21.4%</td><td>10,349</td><td><u>67.8%</u></td><td>77.4%</td><td>3,275</td><td>83.6%</td><td>50.5%</td><td>8,553</td><td>99.6%</td><td>57.3%</td><td>75.8%</td></tr>
+          <tr><td>Dynasor</td><td>78.3%</td><td>1,850</td><td><strong>41.0%</strong></td><td>48.0%</td><td>7,479</td><td><strong>48.8%</strong></td><td><u>79.3%</u></td><td>2,883</td><td><u>78.4%</u></td><td>43.2%</td><td>2,455</td><td><strong>28.4%</strong></td><td>62.2%</td><td><strong>49.15%</strong></td></tr>
+          <tr><td>Thought-Calib</td><td><u>90.1%</u></td><td>4,372</td><td>93.9%</td><td><u>65.8%</u></td><td>11,014</td><td>81.5%</td><td>71.8%</td><td>3,267</td><td>92.9%</td><td><strong>52.6%</strong></td><td>6,240</td><td><u>78.9%</u></td><td><u>70.1%</u></td><td>86.8%</td></tr>
+          <tr class="method-ours"><td>Terminator</td><td><strong>90.7%</strong></td><td>2,425</td><td><u>45.1%</u></td><td><strong>69.4%</strong></td><td>10,970</td><td>70.7%</td><td><strong>82.9%</strong></td><td>2,716</td><td><strong>69.9%</strong></td><td><u>52.1%</u></td><td>7,543</td><td>85.7%</td><td><strong>72.6%</strong></td><td><u>67.8%</u></td></tr>
+
+          <!-- Qwen3-14B -->
+          <tr class="model-header"><td colspan="15">Qwen3-14B</td></tr>
+          <tr><td>Vanilla</td><td>92.0%</td><td>4,598</td><td>100%</td><td>79.9%</td><td>14,255</td><td>100%</td><td>76.0%</td><td>3,296</td><td>100%</td><td>59.9%</td><td>7,628</td><td>100%</td><td>77.0%</td><td>100%</td></tr>
+          <tr><td>NoThinking</td><td>84.1%</td><td>786</td><td>17.5%</td><td>26.3%</td><td>2,472</td><td>19.9%</td><td>78.3%</td><td>317</td><td>12.2%</td><td>32.1%</td><td>1,265</td><td>18.8%</td><td>55.2%</td><td>17.1%</td></tr>
+          <tr><td>DEER</td><td>80.9%</td><td>2,501</td><td>56.2%</td><td>27.6%</td><td>10,497</td><td><u>71.0%</u></td><td>80.7%</td><td>2,961</td><td>87.3%</td><td>49.0%</td><td>7,451</td><td>97.4%</td><td>59.6%</td><td>78.0%</td></tr>
+          <tr><td>Dynasor</td><td>79.6%</td><td>1,702</td><td><strong>42.4%</strong></td><td>61.8%</td><td>7,937</td><td><strong>52.8%</strong></td><td><strong>83.9%</strong></td><td>2,611</td><td><u>82.2%</u></td><td>45.6%</td><td>2,101</td><td><strong>29.1%</strong></td><td>67.7%</td><td><strong>51.6%</strong></td></tr>
+          <tr><td>Thought-Calib</td><td><u>89.8%</u></td><td>3,778</td><td>92.0%</td><td><u>63.3%</u></td><td>9,429</td><td>71.3%</td><td>74.8%</td><td>2,582</td><td>87.1%</td><td><strong>54.6%</strong></td><td>5,757</td><td><u>81.9%</u></td><td><u>70.6%</u></td><td>83.1%</td></tr>
+          <tr class="method-ours"><td>Terminator</td><td><strong>90.7%</strong></td><td>2,261</td><td><u>46.8%</u></td><td><strong>74.2%</strong></td><td>10,787</td><td><u>71.0%</u></td><td><u>83.3%</u></td><td>2,358</td><td><strong>70.9%</strong></td><td><u>53.9%</u></td><td>6,798</td><td>87.1%</td><td><strong>78.0%</strong></td><td><u>65.0%</u></td></tr>
+        </tbody>
+      </table>
     </div>
 
     <details>
-      <summary>Ablation Studies</summary>
+      <summary>Early Answer Detection Signals</summary>
       <div class="details-content">
-        <p>Present ablation results, additional tables, or analysis here.</p>
+        <p>
+          Terminator is a trained method, but our approach is motivated by studying the signals that LRMs naturally produce. We analyze two key signals: (1) Token-Confidence and log-probability trajectories, and (2) shifts in "thinking token" usage before and after the final answer is generated.
+        </p>
+
+        <p>
+          <strong>Event-Locked Averaging.</strong> While individual CoT signals are noisy, aligning many CoTs by the position of the first final-answer occurrence and averaging reveals a clear confidence spike at the answer position; analogous to event-related potentials (ERPs) in EEG research. The left plots below show noisy single-sample trajectories; the right plots show how event-locked averaging across 3,200 CoTs (spanning math, science, and coding) produces a consistent spike at the answer position. Confidence peaks when the final answer is first generated, then immediately drops as the LRM begins to doubt itself with tokens like <em>wait</em>, or <em>but</em>. Additional figures showing similar results on each separate dataset are provided in the appendix of our paper
+        </p>
+
+        <div class="figure">
+          <img src="assets/combined_timeseries_2x2_all.svg" alt="Event-locked averaging of Token-Confidence and log-probability signals">
+          <div class="caption">Figure 3: <strong>Event-Locked Averaging of Token-Confidence.</strong> Left: single-sample trajectories are noisy. Right: averaging many CoTs aligned by the first answer position reveals a clear confidence spike, consistent across data sources.</div>
+        </div>
+
+        <p>
+          <strong>Thinking Token Frequency Shift.</strong> "Thinking tokens," such as <em>wait</em>, <em>hmm</em>, <em>okay</em>, <em>alternatively</em>, are associated with ongoing reasoning. We find that they exhibit measurable frequency shifts once the final answer is generated. The plots below show token rates before vs. after the answer for three such tokens. For example, <em>hmm</em> and <em>okay</em> occur more frequently before the answer, while <em>another</em> occurs more frequently after. Dot size reflects relative CoT length. Similar plots with different "thinking tokens" are shown in the appendix of our paper.
+        </p>
+
+        <div class="figure">
+          <img src="assets/scatter_tokens_1xn_diagonal_all.png" alt="Token usage frequency shift before and after final answer">
+          <div class="caption">Figure 4: <strong>Token Usage Frequency Shift.</strong> "Thinking token" rates change depending on whether the final answer has been generated. Dot size reflects relative CoT length.</div>
+        </div>
       </div>
     </details>
 
