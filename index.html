@@ -38,9 +38,9 @@
       <a href="https://acnagle.com" target="_blank" rel="noopener">Alliot Nagle</a><sup>1</sup>,
       <a href="https://jakhongir.me/" target="_blank" rel="noopener">Jakhongir Saydaliev</a><sup>2</sup>,
       <a href="https://dhia680.github.io/" target="_blank" rel="noopener">Dhia Garbaya</a><sup>3</sup>,
-      <a href="https://ashokvardhan.github.io/" target="_blank" rel="noopener">Ashok Vardhan Makkuva</a><sup>4</sup>,
-      <a href="https://people.epfl.ch/michael.gastpar/?lang=en" target="_blank" rel="noopener">Michael Gastpar</a><sup>2</sup>,
-      <a href="https://www.ece.utexas.edu/people/faculty/hyeji-kim" target="_blank" rel="noopener">Hyeji Kim</a><sup>1</sup>
+      <a href="https://people.epfl.ch/michael.gastpar/?lang=en" target="_blank" rel="noopener">Michael Gastpar</a><sup>2,&dagger;</sup>,
+      <a href="https://ashokvardhan.github.io/" target="_blank" rel="noopener">Ashok Vardhan Makkuva</a><sup>4,&dagger;</sup>,
+      <a href="https://www.ece.utexas.edu/people/faculty/hyeji-kim" target="_blank" rel="noopener">Hyeji Kim</a><sup>1,&dagger;</sup>
     </div>
 
     <div class="affiliations">
@@ -61,7 +61,7 @@
 
   <!-- ── TL;DR ── -->
   <div class="tldr">
-    <strong>TL;DR:</strong> Terminator is a state-of-the-art method for early LRM reasoning termination during online inference, without the need for LRM fine-tuning.
+    <strong>TL;DR:</strong> Terminator is a state-of-the-art method for early LRM reasoning termination during online inference, without the need for full LRM fine-tuning.
   </div>
 
   <!-- ── Teaser figure ── -->
@@ -139,13 +139,14 @@
   <section id="results">
     <h2>Key Results</h2>
     <p>
-    Table 1 shows that Terminator achieves competitive performance compared to existing methods. We provide results for two additional models, <strong>Ministral-3-8B-Reasoning-2512</strong> and <strong>Ministral-3-14B-Reasoning-2512</strong>, in the table in our paper.
+    Table 1 shows that Terminator achieves competitive performance compared to existing methods. We provide results for two additional models, <strong>Ministral-3-8B-Reasoning-2512</strong> and <strong>Ministral-3-14B-Reasoning-2512</strong>, in the table in our paper. Figure 3 directly below it shows the Pareto frontier on each dataset using the same data provided in Table 1. Notably, Terminator lies on or near the Pareto frontier for all datasets and all models.
     </p>
     <div class="caption">
       <strong>Table 1: Performance of Terminator and Baselines.</strong>
       ↑ = higher is better, ↓ = lower is better.
       CR = compression rate (mean per-sample). Tok = mean tokens per sample.
       <strong>Bold</strong> and <u>underlined</u> values highlight the best and second-best early exit methods.
+      Terminator demonstrates superior accuracy-efficiency trade-offs (best or second-best performance across 28 out of 32 metrics).
     </div>
 
     <div class="table-scroll">
@@ -178,8 +179,8 @@
           <tr><td>Vanilla</td><td>91.1%</td><td>5,037</td><td>100%</td><td>74.4%</td><td>14,499</td><td>100%</td><td>86.4%</td><td>3,792</td><td>100%</td><td>57.6%</td><td>8,594</td><td>100%</td><td>77.4%</td><td>100%</td></tr>
           <tr><td>NoThinking</td><td>80.7%</td><td>809</td><td>16.1%</td><td>22.0%</td><td>2,355</td><td>18.6%</td><td>78.5%</td><td>353</td><td>11.8%</td><td>30.7%</td><td>1,204</td><td>15.8%</td><td>53.0%</td><td>15.6%</td></tr>
           <tr><td>DEER</td><td>79.9%</td><td>2,602</td><td>52.0%</td><td>21.4%</td><td>10,349</td><td><u>67.8%</u></td><td>77.4%</td><td>3,275</td><td>83.6%</td><td>50.5%</td><td>8,553</td><td>99.6%</td><td>57.3%</td><td>75.8%</td></tr>
-          <tr><td>Dynasor</td><td>78.3%</td><td>1,850</td><td><strong>41.0%</strong></td><td>48.0%</td><td>7,479</td><td><strong>48.8%</strong></td><td><u>79.3%</u></td><td>2,883</td><td><u>78.4%</u></td><td>43.2%</td><td>2,455</td><td><strong>28.4%</strong></td><td>62.2%</td><td><strong>49.2%</strong></td></tr>
           <tr><td>Thought-Calib</td><td><u>90.1%</u></td><td>4,372</td><td>93.9%</td><td><u>65.8%</u></td><td>11,014</td><td>81.5%</td><td>71.8%</td><td>3,267</td><td>92.9%</td><td><strong>52.6%</strong></td><td>6,240</td><td><u>78.9%</u></td><td><u>70.1%</u></td><td>86.8%</td></tr>
+          <tr><td>Dynasor</td><td>78.3%</td><td>1,850</td><td><strong>41.0%</strong></td><td>48.0%</td><td>7,479</td><td><strong>48.8%</strong></td><td><u>79.3%</u></td><td>2,883</td><td><u>78.4%</u></td><td>43.2%</td><td>2,455</td><td><strong>28.4%</strong></td><td>62.2%</td><td><strong>49.2%</strong></td></tr>
           <tr class="method-ours"><td>Terminator</td><td><strong>90.7%</strong></td><td>2,425</td><td><u>45.1%</u></td><td><strong>69.4%</strong></td><td>10,970</td><td>70.7%</td><td><strong>82.9%</strong></td><td>2,716</td><td><strong>69.9%</strong></td><td><u>52.1%</u></td><td>7,543</td><td>85.7%</td><td><strong>72.6%</strong></td><td><u>67.8%</u></td></tr>
 
           <!-- Qwen3-14B -->
@@ -187,11 +188,16 @@
           <tr><td>Vanilla</td><td>92.0%</td><td>4,598</td><td>100%</td><td>79.9%</td><td>14,255</td><td>100%</td><td>76.0%</td><td>3,296</td><td>100%</td><td>59.9%</td><td>7,628</td><td>100%</td><td>77.0%</td><td>100%</td></tr>
           <tr><td>NoThinking</td><td>84.1%</td><td>786</td><td>17.5%</td><td>26.3%</td><td>2,472</td><td>19.9%</td><td>78.3%</td><td>317</td><td>12.2%</td><td>32.1%</td><td>1,265</td><td>18.8%</td><td>55.2%</td><td>17.1%</td></tr>
           <tr><td>DEER</td><td>80.9%</td><td>2,501</td><td>56.2%</td><td>27.6%</td><td>10,497</td><td><u>71.0%</u></td><td>80.7%</td><td>2,961</td><td>87.3%</td><td>49.0%</td><td>7,451</td><td>97.4%</td><td>59.6%</td><td>78.0%</td></tr>
-          <tr><td>Dynasor</td><td>79.6%</td><td>1,702</td><td><strong>42.4%</strong></td><td>61.8%</td><td>7,937</td><td><strong>52.8%</strong></td><td><strong>83.9%</strong></td><td>2,611</td><td><u>82.2%</u></td><td>45.6%</td><td>2,101</td><td><strong>29.1%</strong></td><td>67.7%</td><td><strong>51.6%</strong></td></tr>
           <tr><td>Thought-Calib</td><td><u>89.8%</u></td><td>3,778</td><td>92.0%</td><td><u>63.3%</u></td><td>9,429</td><td>71.3%</td><td>74.8%</td><td>2,582</td><td>87.1%</td><td><strong>54.6%</strong></td><td>5,757</td><td><u>81.9%</u></td><td><u>70.6%</u></td><td>83.1%</td></tr>
+          <tr><td>Dynasor</td><td>79.6%</td><td>1,702</td><td><strong>42.4%</strong></td><td>61.8%</td><td>7,937</td><td><strong>52.8%</strong></td><td><strong>83.9%</strong></td><td>2,611</td><td><u>82.2%</u></td><td>45.6%</td><td>2,101</td><td><strong>29.1%</strong></td><td>67.7%</td><td><strong>51.6%</strong></td></tr>
           <tr class="method-ours"><td>Terminator</td><td><strong>90.7%</strong></td><td>2,261</td><td><u>46.8%</u></td><td><strong>74.2%</strong></td><td>10,787</td><td><u>71.0%</u></td><td><u>83.3%</u></td><td>2,358</td><td><strong>70.9%</strong></td><td><u>53.9%</u></td><td>6,798</td><td>87.1%</td><td><strong>78.0%</strong></td><td><u>65.0%</u></td></tr>
         </tbody>
       </table>
+    </div>
+
+    <div class="figure">
+      <img src="assets/pareto_frontier_qwen.png" alt="Pareto frontiers of accuracy versus compression rate across reasoning models and benchmarks">
+      <div class="caption">Figure 3: Pareto frontiers of accuracy versus compression rate across four reasoning models (Qwen3-8B, Qwen3-14B, Ministral-8B, Ministral-14B) and four benchmarks (MATH-500, AIME25, HumanEval, GPQA). Each point represents a method's accuracy and compression rate, with lower compression rates indicating greater token savings. The dashed line traces the Pareto frontier connecting non-dominated solutions. Terminator consistently achieves strong Pareto efficiency. Results highlight that Terminator offers the best accuracy–efficiency tradeoff across models and tasks. The data used to generate this figure is the same as the data from Table 1.</div>
     </div>
 
     <a href="#section-nav" class="back-to-nav">↑ Back to sections</a>
@@ -217,7 +223,7 @@
 
         <div class="figure">
           <img src="assets/combined_timeseries_2x2_all.svg" alt="Event-locked averaging of Token-Confidence and log-probability signals">
-          <div class="caption">Figure 3: <strong>Event-Locked Averaging of Token-Confidence.</strong> Left: single-sample trajectories are noisy. Right: averaging many CoTs aligned by the first answer position reveals a clear confidence spike, consistent across data sources.</div>
+          <div class="caption">Figure 4: <strong>Event-Locked Averaging of Token-Confidence.</strong> Left: single-sample trajectories are noisy. Right: averaging many CoTs aligned by the first answer position reveals a clear confidence spike, consistent across data sources.</div>
         </div>
 
         <p>
@@ -226,7 +232,7 @@
 
         <div class="figure">
           <img src="assets/scatter_tokens_1xn_diagonal_all.png" alt="Token usage frequency shift before and after final answer">
-          <div class="caption">Figure 4: <strong>Token Usage Frequency Shift.</strong> "Thinking token" rates change depending on whether the final answer has been generated. Dot size reflects relative CoT length.</div>
+          <div class="caption">Figure 5: <strong>Token Usage Frequency Shift.</strong> "Thinking token" rates change depending on whether the final answer has been generated. Dot size reflects relative CoT length.</div>
         </div>
       </div>
     </details>
@@ -362,7 +368,7 @@ print(response.choices[<span class="code-number">0</span>].message.content)</cod
 
   <!-- ── Footer ── -->
   <footer>
-    <p>Acknowledgements go here.</p>
+    <p>This work was partly supported by ARO Award W911NF2310062, ONR Award N000142412542, NSF 2443857 and the 6G@UT center within the Wireless Networking and Communications Group (WNCG) at the University of Texas at Austin. Our work used the Vista cluster at the Texas Advanced Computing Center (TACC) at The University of Texas at Austin. We thank TACC for providing the high-performance computing resources that supported this research.</p>
   </footer>
 
 </div>
