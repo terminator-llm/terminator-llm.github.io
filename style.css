@@ -328,7 +328,7 @@ details .details-content {
   max-width: 100%;
   border-radius: 8px;
   background: #fff;
-  padding: 1rem;
+  padding: 0.2rem;
   border: 1px solid #e5e7eb;
   transition: background 0.5s, border-color 0.5s;
 }
