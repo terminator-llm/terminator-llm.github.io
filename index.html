@@ -52,7 +52,7 @@
 
     <div class="resource-links">
         <!-- <a href="#" target="_blank" rel="noopener"><i class="fa-solid fa-file-pdf"></i> Paper</a> -->
-      <a href="#" target="_blank" rel="noopener"><img src="assets/arxiv.svg" alt="" class="icon icon-white"> arXiv</a>
+      <a href="https://arxiv.org/abs/2603.12529" target="_blank" rel="noopener"><img src="assets/arxiv.svg" alt="" class="icon icon-white"> arXiv</a>
       <a href="#" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i> Code (coming soon!)</a>
       <a href="#" target="_blank" rel="noopener"><i class="fa-solid fa-database"></i> Data (coming soon!)</a>
       <a href="https://huggingface.co/collections/acnagle/terminator" target="_blank" rel="noopener"><img src="assets/hf-logo.svg" alt="" class="icon"> Models</a>
@@ -61,7 +61,17 @@
 
   <!-- ── TL;DR ── -->
   <div class="tldr">
-    <strong>TL;DR:</strong> Terminator is a state-of-the-art method for early LRM reasoning termination during online inference, without the need for full LRM fine-tuning.
+    <strong>TL;DR:</strong> Terminator cuts LLM reasoning length by 14%&ndash;55%, halves wall-clock latency, and achieves best or second-best performance on 28 of 32 metrics across four models and four benchmarks, all without fine-tuning the base model.
+  </div>
+
+  <!-- ── Highlights ── -->
+  <div class="highlights">
+    <ul>
+      <li>We introduce <strong>hindsight-optimal reasoning length</strong>, a novel framework for determining where an LRM should stop thinking.</li>
+      <li>Terminator is a <strong>lightweight single-layer probe</strong> that sits on top of any LRM. No fine-tuning of the base model is required.</li>
+      <li><strong>Best or second-best on 28 of 32 metrics</strong> across four models (Qwen3-8B/14B, Ministral-8B/14B) and four benchmarks (MATH-500, AIME 2025, HumanEval, GPQA).</li>
+      <li><strong>2&times; faster wall-clock inference on average</strong> with only ~10% throughput overhead.</li>
+    </ul>
   </div>
 
   <!-- ── Teaser figure ── -->
@@ -70,13 +80,14 @@
       <source src="assets/terminator_compressed.mp4" type="video/mp4">
       Your browser does not support the video tag.
     </video>
-    <div class="caption">Figure 1: Side-by-side comparison of <strong>Terminator-Qwen3-8B</strong> (left) vs. <strong>vanilla Qwen3-8B</strong> (right) on the following MATH-500 question: <br>"Define $p = \sum_{k=1}^\infty \frac{1}{k^2}$ and $q = \sum_{k=1}^\infty \frac{1}{k^3}.$ Find a way to write $\sum_{j=1}^\infty \sum_{k=1}^\infty \frac{1}{(j+k)^3}$ in terms of $p$ and $q.$"</div>
+    <div class="caption"><strong>Figure 1: Early Stopping via Terminator.</strong> Side-by-side comparison of Terminator-Qwen3-8B (left) vs. vanilla Qwen3-8B (right) on the following MATH-500 question: "Define $p = \sum_{k=1}^\infty \frac{1}{k^2}$ and $q = \sum_{k=1}^\infty \frac{1}{k^3}.$ Find a way to write $\sum_{j=1}^\infty \sum_{k=1}^\infty \frac{1}{(j+k)^3}$ in terms of $p$ and $q.$"</div>
   </div>
 
   <!-- ── Section navigation ── -->
   <nav id="section-nav" class="section-nav">
-    <a href="#method">🔬 Method</a>
+    <a href="#motivation">💡 Motivation</a>
     <a href="#results">📊 Key Results</a>
+    <a href="#method">🔬 Method</a>
     <a href="#additional">📈 Additional Results</a>
     <a href="#demo">🚀 Demo</a>
     <a href="#citation">📝 Citation</a>
@@ -90,47 +101,24 @@
     </p>
   </div>
 
-  <!-- ── Method ── -->
-  <section id="method">
-    <h2>Method</h2>
+  <!-- ── Motivation ── -->
+  <section id="motivation">
+    <h2>Motivation</h2>
     <p>
-      Terminator is a single-layer transformer that sits on top of a base LRM and injects the end-of-thought token when the LRM has generated its final answer. Terminator accepts the final hidden-states of the LRM as input, and predicts a 0 if the answer has not been generated yet, or 1 if it has.
+      Large Reasoning Models (LRMs) frequently <strong>overthink</strong>: even after generating the correct final answer early in their Chain-of-Thought, they continue to reason for hundreds or thousands of additional tokens, double-checking, exploring alternatives, and sometimes even changing to a wrong answer.
+    </p>
+    <p>
+      A natural question follows: <em>can we detect when the LRM has already generated its final answer?</em> We find that the answer is yes. By aligning many CoTs to the position where the final answer first appears and averaging, a clear confidence spike emerges at exactly that position. Individual CoT signals are noisy (Figure 2, left), but event-locked averaging across 3,200 CoTs from math, science, and coding problems reveals a consistent and sharp signal (Figure 2, right).
     </p>
 
     <div class="figure">
-      <img src="assets/terminator.svg" alt="Method diagram">
-      <div class="caption">Figure 2: Terminator predicts when the LRM has generated its final answer.</div>
+      <img src="assets/combined_timeseries_2x2_all.svg" alt="Event-locked averaging of Token-Confidence and log-probability signals">
+      <div class="caption"><strong>Figure 2: Event-Locked Averaging of Token-Confidence.</strong> Left: single-sample trajectories are noisy. Right: averaging many CoTs aligned by the first answer position reveals a clear confidence spike, consistent across data sources.</div>
     </div>
 
-    <details>
-      <summary>Training Details</summary>
-      <div class="details-content">
-        <p>
-          Terminator is trained to predict the exact position of the first occurrence of the final answer of an LRM's CoT during online inference. An important challenge we overcome is to identify the exact position of the earliest final answer occurrence for a given CoT. Our training dataset is curated using the following pipeline for robust extraction of the answer position:
-        </p>
-        <ol>
-          <li>Collect CoTs from the LRM</li>
-          <li>For each CoT, we use a separate LRM to analyze the CoT for the final answer and extract its exact position</li>
-          <li>Given the token position index of the answer, we construct the labels: set all positions before the answer to 0 and all positions after to 1</li>
-        </ol>
-        <p>
-          Finally, Terminator is trained with binary cross-entropy loss over each position in the CoT. By using the above training strategy, Terminator learns to exit when the LRM has generated the final answer it will eventually commit to.
-        </p>
-      </div>
-    </details>
-    <details>
-      <summary>Inference Details</summary>
-      <div class="details-content">
-        <p>
-          At inference time, Terminator makes a prediction for each generated token by the LRM. Terminator forces the end-of-thought token to terminate reasoning early by using the following rules:
-        </p>
-        <ul>
-          <li>Predict 1 if the predicted confidence is above a fixed threshold (set to 0.7 by default)</li>
-          <li>Count the number of predicted 1s in a sliding window of the most recent predictions (the window size is 10 by default)</li>
-          <li>If the majority (>5 if the window size is 10) of predictions are 1, then the CoT is terminated</li>
-        </ul>
-      </div>
-    </details>
+    <p>
+      While this averaged signal clearly marks the answer position, using it directly during online inference is not straightforward: it requires multiple CoTs and knowledge of the answer position, which is the very thing we are trying to predict. This motivates a <strong>learned approach</strong>: training a probe on the LRM's hidden states to predict, token by token, whether the final answer has already been generated.
+    </p>
 
     <a href="#section-nav" class="back-to-nav">↑ Back to sections</a>
   </section>
@@ -139,7 +127,7 @@
   <section id="results">
     <h2>Key Results</h2>
     <p>
-    Table 1 shows that Terminator achieves competitive performance compared to existing methods. We provide results for two additional models, <strong>Ministral-3-8B-Reasoning-2512</strong> and <strong>Ministral-3-14B-Reasoning-2512</strong>, in the table in our paper. Figure 3 directly below it shows the Pareto frontier on each dataset using the same data provided in Table 1. Notably, Terminator lies on or near the Pareto frontier for all datasets and all models.
+    Table 1 shows that Terminator achieves competitive performance compared to existing methods. We provide results for two additional models, <strong>Ministral-3-8B-Reasoning-2512</strong> and <strong>Ministral-3-14B-Reasoning-2512</strong>, in the table in our paper. Figure 3 shows the Pareto frontier on each dataset using the same data provided in Table 1. Notably, Terminator lies on or near the Pareto frontier for all datasets and all models.
     </p>
     <div class="caption">
       <strong>Table 1: Performance of Terminator and Baselines.</strong>
@@ -197,8 +185,83 @@
 
     <div class="figure">
       <img src="assets/pareto_frontier_qwen.png" alt="Pareto frontiers of accuracy versus compression rate across reasoning models and benchmarks">
-      <div class="caption">Figure 3: Pareto frontiers of accuracy versus compression rate across four reasoning models (Qwen3-8B, Qwen3-14B, Ministral-8B, Ministral-14B) and four benchmarks (MATH-500, AIME25, HumanEval, GPQA). Each point represents a method's accuracy and compression rate, with lower compression rates indicating greater token savings. The dashed line traces the Pareto frontier connecting non-dominated solutions. Terminator consistently achieves strong Pareto efficiency. Results highlight that Terminator offers the best accuracy–efficiency tradeoff across models and tasks. The data used to generate this figure is the same as the data from Table 1.</div>
+      <div class="caption"><strong>Figure 3: Pareto Frontiers.</strong> Accuracy versus compression rate across four reasoning models (Qwen3-8B, Qwen3-14B, Ministral-8B, Ministral-14B) and four benchmarks (MATH-500, AIME25, HumanEval, GPQA). Each point represents a method's accuracy and compression rate, with lower compression rates indicating greater token savings. The dashed line traces the Pareto frontier connecting non-dominated solutions. Terminator consistently achieves strong Pareto efficiency, offering the best accuracy-efficiency tradeoff across models and tasks.</div>
     </div>
+
+    <h3>Latency Analysis</h3>
+    <p>
+      We benchmark Terminator's latency and throughput using a vLLM-compatible implementation on MATH-500 (batch size 1, single GH200). Terminator more than halves the average latency with only a small throughput overhead of 10.8% for Qwen3-8B and 7.5% for Qwen3-14B. Because Terminator's architecture (a single transformer layer and an FFN) remains fixed, the overhead shrinks proportionally as the base LRM grows.
+    </p>
+
+    <div class="caption">
+      <strong>Table 2: Latency Analysis.</strong>
+      Latency and throughput benchmarks on MATH-500 (batch size 1) for Qwen3-based vanilla and Terminator models. Values are mean &pm; 95% CI.
+    </div>
+
+    <div class="table-scroll">
+      <table class="results-table latency-table">
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Latency (s)</th>
+            <th>Throughput (tok/s)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="model-header"><td colspan="3">Qwen3-8B</td></tr>
+          <tr><td>Vanilla</td><td>32.68 &pm; 9.59</td><td>151.5 &pm; 4.4</td></tr>
+          <tr class="method-ours"><td>Terminator</td><td>14.10 &pm; 6.27</td><td>135.2 &pm; 2.0</td></tr>
+          <tr class="model-header"><td colspan="3">Qwen3-14B</td></tr>
+          <tr><td>Vanilla</td><td>43.38 &pm; 13.98</td><td>98.0 &pm; 2.0</td></tr>
+          <tr class="method-ours"><td>Terminator</td><td>18.76 &pm; 6.52</td><td>90.6 &pm; 0.8</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <a href="#section-nav" class="back-to-nav">↑ Back to sections</a>
+  </section>
+
+  <!-- ── Method ── -->
+  <section id="method">
+    <h2>Method</h2>
+    <p>
+      Terminator is a single-layer transformer that sits on top of a base LRM and injects the end-of-thought token when the LRM has generated its final answer. Terminator accepts the final hidden-states of the LRM as input, and predicts a 0 if the answer has not been generated yet, or 1 if it has.
+    </p>
+
+    <div class="figure">
+      <img src="assets/terminator.svg" alt="Method diagram">
+      <div class="caption"><strong>Figure 4: Terminator Architecture.</strong> Terminator predicts when the LRM has generated its final answer.</div>
+    </div>
+
+    <details>
+      <summary>Training Details</summary>
+      <div class="details-content">
+        <p>
+          Terminator is trained to predict the exact position of the first occurrence of the final answer of an LRM's CoT during online inference. An important challenge we overcome is to identify the exact position of the earliest final answer occurrence for a given CoT. Our training dataset is curated using the following pipeline for robust extraction of the answer position:
+        </p>
+        <ol>
+          <li>Collect CoTs from the LRM</li>
+          <li>For each CoT, we use a separate LRM to analyze the CoT for the final answer and extract its exact position</li>
+          <li>Given the token position index of the answer, we construct the labels: set all positions before the answer to 0 and all positions after to 1</li>
+        </ol>
+        <p>
+          Finally, Terminator is trained with binary cross-entropy loss over each position in the CoT. By using the above training strategy, Terminator learns to exit when the LRM has generated the final answer it will eventually commit to.
+        </p>
+      </div>
+    </details>
+    <details>
+      <summary>Inference Details</summary>
+      <div class="details-content">
+        <p>
+          At inference time, Terminator makes a prediction for each generated token by the LRM. Terminator forces the end-of-thought token to terminate reasoning early by using the following rules:
+        </p>
+        <ul>
+          <li>Predict 1 if the predicted confidence is above a fixed threshold (set to 0.7 by default)</li>
+          <li>Count the number of predicted 1s in a sliding window of the most recent predictions (the window size is 10 by default)</li>
+          <li>If the majority (>5 if the window size is 10) of predictions are 1, then the CoT is terminated</li>
+        </ul>
+      </div>
+    </details>
 
     <a href="#section-nav" class="back-to-nav">↑ Back to sections</a>
   </section>
@@ -211,28 +274,15 @@
     </p>
 
     <details>
-      <summary>Early Answer Detection Signals</summary>
+      <summary>Thinking Token Frequency Shift</summary>
       <div class="details-content">
         <p>
-          Terminator is a trained method, but our approach is motivated by studying the signals that LRMs naturally produce. We analyze two key signals: (1) Token-Confidence and log-probability trajectories, and (2) shifts in "thinking token" usage before and after the final answer is generated.
-        </p>
-
-        <p>
-          <strong>Event-Locked Averaging.</strong> While individual CoT signals are noisy, aligning many CoTs by the position of the first final-answer occurrence and averaging reveals a clear confidence spike at the answer position; analogous to event-related potentials (ERPs) in EEG research. The left plots below show noisy single-sample trajectories; the right plots show how event-locked averaging across 3,200 CoTs (spanning math, science, and coding) produces a consistent spike at the answer position. Confidence peaks when the final answer is first generated, then immediately drops as the LRM begins to doubt itself with tokens like <em>wait</em>, or <em>but</em>. Additional figures showing similar results on each separate dataset are provided in the appendix of our paper.
-        </p>
-
-        <div class="figure">
-          <img src="assets/combined_timeseries_2x2_all.svg" alt="Event-locked averaging of Token-Confidence and log-probability signals">
-          <div class="caption">Figure 4: <strong>Event-Locked Averaging of Token-Confidence.</strong> Left: single-sample trajectories are noisy. Right: averaging many CoTs aligned by the first answer position reveals a clear confidence spike, consistent across data sources.</div>
-        </div>
-
-        <p>
-          <strong>Thinking Token Frequency Shift.</strong> "Thinking tokens," such as <em>wait</em>, <em>hmm</em>, <em>okay</em>, <em>alternatively</em>, are associated with ongoing reasoning. We find that they exhibit measurable frequency shifts once the final answer is generated. The plots below show token rates before vs. after the answer for three such tokens. For example, <em>hmm</em> and <em>okay</em> occur more frequently before the answer, while <em>another</em> occurs more frequently after. Dot size reflects relative CoT length. Similar plots with different "thinking tokens" are shown in the appendix of our paper.
+          "Thinking tokens" such as <em>wait</em>, <em>hmm</em>, <em>okay</em>, and <em>alternatively</em> are associated with ongoing reasoning. We find that they exhibit measurable frequency shifts once the final answer is generated. The plots below show token rates before vs. after the answer for three such tokens. For example, <em>hmm</em> and <em>okay</em> occur more frequently before the answer, while <em>another</em> occurs more frequently after. Dot size reflects relative CoT length. Similar plots with different "thinking tokens" are shown in the appendix of our paper.
         </p>
 
         <div class="figure">
           <img src="assets/scatter_tokens_1xn_diagonal_all.png" alt="Token usage frequency shift before and after final answer">
-          <div class="caption">Figure 5: <strong>Token Usage Frequency Shift.</strong> "Thinking token" rates change depending on whether the final answer has been generated. Dot size reflects relative CoT length.</div>
+          <div class="caption"><strong>Figure 5: Token Usage Frequency Shift.</strong> "Thinking token" rates change depending on whether the final answer has been generated. Dot size reflects relative CoT length.</div>
         </div>
       </div>
     </details>
@@ -240,13 +290,19 @@
     <details>
       <summary>Example 1: MATH-500</summary>
       <div class="details-content">
+        <p>
+          For easier problems like those in MATH-500, Terminator shows sharp transitions in predicted confidence at the exiting threshold, with good separation between the "still reasoning" and "answer generated" regimes. By manual inspection, we observe that there is a clearer transition to overthinking on these problems, which Terminator detects well.
+        </p>
         <div class="figure">
           <img src="assets/individual_samples_2x2_math-500.png" alt="Predicted probabilities for four MATH-500 samples">
-          <div class="caption"><strong>Predicted Probabilities for MATH-500.</strong> Terminator's predicted probability stream for early-exiting on four randomly chosen samples from MATH-500.</div>
+          <div class="caption"><strong>Figure 6: Predicted Probabilities for MATH-500.</strong> Terminator's predicted probability stream for early-exiting on four randomly chosen samples from MATH-500.</div>
         </div>
+        <p>
+          Figure 7 zooms in on a single MATH-500 sample, showing the full CoT with Terminator's predicted probabilities overlaid. The predicted probability remains low throughout the reasoning phase and rises sharply once the final answer has been generated, triggering the early exit.
+        </p>
         <div class="figure">
           <img src="assets/cot_math_sample_77.png" alt="Predicted probabilities for a single MATH-500 sample">
-          <div class="caption"><strong>Predicted Probabilities for MATH-500.</strong> Terminator's predicted probabilities for early-exit on a randomly chosen sample from MATH-500. The beginning and the end are truncated for better visibility.</div>
+          <div class="caption"><strong>Figure 7: Predicted Probabilities for MATH-500.</strong> Terminator's predicted probabilities for early-exit on a randomly chosen sample from MATH-500. The beginning and the end are truncated for better visibility.</div>
         </div>
       </div>
     </details>
@@ -254,13 +310,19 @@
     <details>
       <summary>Example 2: AIME 2025</summary>
       <div class="details-content">
+        <p>
+          For harder problems like those in AIME 2025, the transition from productive reasoning to overthinking is less obvious, and Terminator's predicted probabilities do not show the same sharp transition seen on MATH-500. This is consistent with the observation that identifying a good exit position is more challenging on very hard tasks.
+        </p>
         <div class="figure">
           <img src="assets/individual_samples_2x2_aime_2025.png" alt="Predicted probabilities for four AIME 2025 samples">
-          <div class="caption"><strong>Predicted Probabilities for AIME 2025.</strong> Terminator's predicted probability stream for early-exiting on four randomly chosen samples from AIME 2025.</div>
+          <div class="caption"><strong>Figure 8: Predicted Probabilities for AIME 2025.</strong> Terminator's predicted probability stream for early-exiting on four randomly chosen samples from AIME 2025.</div>
         </div>
+        <p>
+          Figure 9 shows a case where Terminator struggles to find a clean exit position. The predicted probabilities oscillate near the threshold rather than making a decisive jump, reflecting the difficulty of the underlying problem. Despite this, Terminator still achieves strong performance on AIME 2025 overall.
+        </p>
         <div class="figure">
           <img src="assets/cot_aime_sample_508.png" alt="Predicted probabilities for a single AIME 2025 sample">
-          <div class="caption"><strong>Predicted Probabilities for AIME 2025.</strong> Terminator's predicted probabilities for early-exit on a randomly chosen sample from AIME 2025. The beginning and the end are truncated for better visibility. Here we are showing that Terminator's predicted probabilities local to its chosen exit position in a case where Terminator struggles to find an appropriate exit position.</div>
+          <div class="caption"><strong>Figure 9: Predicted Probabilities for AIME 2025.</strong> Terminator's predicted probabilities for early-exit on a randomly chosen sample from AIME 2025. The beginning and the end are truncated for better visibility.</div>
         </div>
       </div>
     </details>
@@ -357,11 +419,14 @@ print(response.choices[<span class="code-number">0</span>].message.content)</cod
   <!-- ── Citation ── -->
   <section id="citation" class="bibtex">
     <h2>Citation</h2>
-    <pre>@article{authorlastname2025shorttitle,
-  title   = {Your Paper Title Goes Here},
-  author  = {One, Author and Two, Author and Three, Author},
-  journal = {arXiv preprint arXiv:XXXX.XXXXX},
-  year    = {2025}
+    <pre>@misc{nagle2026terminatorlearningoptimalexit,
+  title   = {TERMINATOR: Learning Optimal Exit Points for Early Stopping in Chain-of-Thought Reasoning},
+  author  = {Alliot Nagle and Jakhongir Saydaliev and Dhia Garbaya and Michael Gastpar and Ashok Vardhan Makkuva and Hyeji Kim},
+  year    = {2026},
+  eprint  = {2603.12529},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG},
+  url     = {https://arxiv.org/abs/2603.12529}
 }</pre>
     <a href="#section-nav" class="back-to-nav">↑ Back to sections</a>
   </section>
