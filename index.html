@@ -120,15 +120,28 @@
       While this averaged signal clearly marks the answer position, using it directly during online inference is not straightforward: it requires multiple CoTs and knowledge of the answer position, which is the very thing we are trying to predict. This motivates a <strong>learned approach</strong>: training a probe on the LRM's hidden states to predict, token by token, whether the final answer has already been generated.
     </p>
 
+    <h3>Event-Related Potentials for LRMs</h3>
+    <p>
+      We liken the averaged result in Figure 2 to the field of <em>event-related potential</em> (ERP) research. An ERP is a measurable brain response elicited by a sensory, cognitive, or motor event, captured by electroencephalogram (EEG) recordings (<a href="https://mitpress.mit.edu/9780262525855/an-introduction-to-the-event-related-potential-technique/" target="_blank" rel="noopener" title="Luck, S. J. (2014). An Introduction to the Event-Related Potential Technique (2nd ed.). The MIT Press.">Luck, 2014</a>). However, EEG recordings are often noisy, so ERPs are estimated using time-locked statistical estimators (e.g., averaging) across multiple EEG trials. While we do not claim that our findings will align exactly with ERP research, it is quite interesting that meaningful and observable signals can be extracted from LRMs using similar approaches, and we believe this warrants further exploration in future work.
+    </p>
+
     <a href="#section-nav" class="back-to-nav">↑ Back to sections</a>
   </section>
 
   <!-- ── Key Results ── -->
   <section id="results">
     <h2>Key Results</h2>
+    <h3>Performance Analysis</h3>
     <p>
-    Table 1 shows that Terminator achieves competitive performance compared to existing methods. We provide results for two additional models, <strong>Ministral-3-8B-Reasoning-2512</strong> and <strong>Ministral-3-14B-Reasoning-2512</strong>, in the table in our paper. Figure 3 shows the Pareto frontier on each dataset using the same data provided in Table 1. Notably, Terminator lies on or near the Pareto frontier for all datasets and all models.
+    Figure 3 shows that Terminator defines the Pareto frontier on 14 of the 16 (LRM, benchmark) pairings, outperforming prior work. The plot covers four reasoning models (Qwen3-8B, Qwen3-14B, Ministral-3-8B-Reasoning-2512, Ministral-3-14B-Reasoning-2512) and four benchmarks (MATH-500, AIME 2025, HumanEval, GPQA). The full underlying numbers are reported in our paper.
     </p>
+
+    <div class="figure">
+      <img src="assets/pareto_frontier_compact.png" alt="Pareto frontiers of accuracy versus compression rate across reasoning models and benchmarks">
+      <div class="caption"><strong>Figure 3: Pareto Frontier.</strong> Terminator defines the Pareto frontier on 14 of the 16 (LRM, benchmark) pairings, outperforming prior work. Each point represents a method's accuracy and compression rate, with lower compression rates indicating greater token savings and hence compute. The dashed line traces the Pareto frontier connecting non-dominated solutions.</div>
+    </div>
+
+    <div style="display:none">
     <div class="caption">
       <strong>Table 1: Performance of Terminator and Baselines.</strong>
       ↑ = higher is better, ↓ = lower is better.
@@ -164,28 +177,42 @@
         <tbody>
           <!-- Qwen3-8B -->
           <tr class="model-header"><td colspan="15">Qwen3-8B</td></tr>
-          <tr><td>Vanilla</td><td>91.1%</td><td>5,037</td><td>100%</td><td>74.4%</td><td>14,499</td><td>100%</td><td>86.4%</td><td>3,792</td><td>100%</td><td>57.6%</td><td>8,594</td><td>100%</td><td>77.4%</td><td>100%</td></tr>
-          <tr><td>NoThinking</td><td>80.7%</td><td>809</td><td>16.1%</td><td>22.0%</td><td>2,355</td><td>18.6%</td><td>78.5%</td><td>353</td><td>11.8%</td><td>30.7%</td><td>1,204</td><td>15.8%</td><td>53.0%</td><td>15.6%</td></tr>
-          <tr><td>DEER</td><td>79.9%</td><td>2,602</td><td>52.0%</td><td>21.4%</td><td>10,349</td><td><u>67.8%</u></td><td>77.4%</td><td>3,275</td><td>83.6%</td><td>50.5%</td><td>8,553</td><td>99.6%</td><td>57.3%</td><td>75.8%</td></tr>
-          <tr><td>Thought-Calib</td><td><u>90.1%</u></td><td>4,372</td><td>93.9%</td><td><u>65.8%</u></td><td>11,014</td><td>81.5%</td><td>71.8%</td><td>3,267</td><td>92.9%</td><td><strong>52.6%</strong></td><td>6,240</td><td><u>78.9%</u></td><td><u>70.1%</u></td><td>86.8%</td></tr>
-          <tr><td>Dynasor</td><td>78.3%</td><td>1,850</td><td><strong>41.0%</strong></td><td>48.0%</td><td>7,479</td><td><strong>48.8%</strong></td><td><u>79.3%</u></td><td>2,883</td><td><u>78.4%</u></td><td>43.2%</td><td>2,455</td><td><strong>28.4%</strong></td><td>62.2%</td><td><strong>49.2%</strong></td></tr>
-          <tr class="method-ours"><td>Terminator</td><td><strong>90.7%</strong></td><td>2,425</td><td><u>45.1%</u></td><td><strong>69.4%</strong></td><td>10,970</td><td>70.7%</td><td><strong>82.9%</strong></td><td>2,716</td><td><strong>69.9%</strong></td><td><u>52.1%</u></td><td>7,543</td><td>85.7%</td><td><strong>72.6%</strong></td><td><u>67.8%</u></td></tr>
+          <tr><td>Vanilla</td><td>91.1%</td><td>5,037</td><td>100%</td><td>74.4%</td><td>14,499</td><td>100%</td><td>94.9%</td><td>3,792</td><td>100%</td><td>58.0%</td><td>8,594</td><td>100%</td><td>79.6%</td><td>100%</td></tr>
+          <tr><td>NoThinking</td><td>80.7%</td><td>809</td><td>16.1%</td><td>22.0%</td><td>2,355</td><td>18.6%</td><td>84.6%</td><td>353</td><td>11.8%</td><td>46.0%</td><td>1,204</td><td>15.8%</td><td>58.3%</td><td>15.6%</td></tr>
+          <tr><td>DEER</td><td>79.9%</td><td>2,602</td><td>52.0%</td><td>21.4%</td><td>10,349</td><td><u>67.8%</u></td><td>93.7%</td><td>3,275</td><td>83.6%</td><td>50.3%</td><td>8,553</td><td>99.6%</td><td>61.3%</td><td>75.8%</td></tr>
+          <tr><td>Thought-Calib</td><td><u>90.1%</u></td><td>4,372</td><td>93.9%</td><td><u>65.8%</u></td><td>11,014</td><td>81.5%</td><td>93.9%</td><td>3,267</td><td>92.9%</td><td><strong>56.6%</strong></td><td>6,240</td><td><u>78.9%</u></td><td><u>76.6%</u></td><td>86.8%</td></tr>
+          <tr><td>Dynasor</td><td>78.3%</td><td>1,850</td><td><strong>41.0%</strong></td><td>48.0%</td><td>7,479</td><td><strong>48.8%</strong></td><td><u>94.5%</u></td><td>2,883</td><td><u>78.4%</u></td><td>41.7%</td><td>2,455</td><td><strong>28.4%</strong></td><td>65.6%</td><td><strong>49.2%</strong></td></tr>
+          <tr class="method-ours"><td>Terminator</td><td><strong>90.7%</strong></td><td>2,425</td><td><u>45.1%</u></td><td><strong>69.4%</strong></td><td>10,970</td><td>70.7%</td><td><strong>95.7%</strong></td><td>2,716</td><td><strong>69.9%</strong></td><td><u>55.7%</u></td><td>7,543</td><td>85.7%</td><td><strong>77.9%</strong></td><td><u>67.8%</u></td></tr>
 
           <!-- Qwen3-14B -->
           <tr class="model-header"><td colspan="15">Qwen3-14B</td></tr>
-          <tr><td>Vanilla</td><td>92.0%</td><td>4,598</td><td>100%</td><td>79.9%</td><td>14,255</td><td>100%</td><td>76.0%</td><td>3,296</td><td>100%</td><td>59.9%</td><td>7,628</td><td>100%</td><td>77.0%</td><td>100%</td></tr>
-          <tr><td>NoThinking</td><td>84.1%</td><td>786</td><td>17.5%</td><td>26.3%</td><td>2,472</td><td>19.9%</td><td>78.3%</td><td>317</td><td>12.2%</td><td>32.1%</td><td>1,265</td><td>18.8%</td><td>55.2%</td><td>17.1%</td></tr>
-          <tr><td>DEER</td><td>80.9%</td><td>2,501</td><td>56.2%</td><td>27.6%</td><td>10,497</td><td><u>71.0%</u></td><td>80.7%</td><td>2,961</td><td>87.3%</td><td>49.0%</td><td>7,451</td><td>97.4%</td><td>59.6%</td><td>78.0%</td></tr>
-          <tr><td>Thought-Calib</td><td><u>89.8%</u></td><td>3,778</td><td>92.0%</td><td><u>63.3%</u></td><td>9,429</td><td>71.3%</td><td>74.8%</td><td>2,582</td><td>87.1%</td><td><strong>54.6%</strong></td><td>5,757</td><td><u>81.9%</u></td><td><u>70.6%</u></td><td>83.1%</td></tr>
-          <tr><td>Dynasor</td><td>79.6%</td><td>1,702</td><td><strong>42.4%</strong></td><td>61.8%</td><td>7,937</td><td><strong>52.8%</strong></td><td><strong>83.9%</strong></td><td>2,611</td><td><u>82.2%</u></td><td>45.6%</td><td>2,101</td><td><strong>29.1%</strong></td><td>67.7%</td><td><strong>51.6%</strong></td></tr>
-          <tr class="method-ours"><td>Terminator</td><td><strong>90.7%</strong></td><td>2,261</td><td><u>46.8%</u></td><td><strong>74.2%</strong></td><td>10,787</td><td><u>71.0%</u></td><td><u>83.3%</u></td><td>2,358</td><td><strong>70.9%</strong></td><td><u>53.9%</u></td><td>6,798</td><td>87.1%</td><td><strong>78.0%</strong></td><td><u>65.0%</u></td></tr>
+          <tr><td>Vanilla</td><td>92.0%</td><td>4,598</td><td>100%</td><td>79.9%</td><td>14,255</td><td>100%</td><td>96.9%</td><td>3,296</td><td>100%</td><td>60.2%</td><td>7,628</td><td>100%</td><td>82.3%</td><td>100%</td></tr>
+          <tr><td>NoThinking</td><td>84.1%</td><td>786</td><td>17.5%</td><td>26.3%</td><td>2,472</td><td>19.9%</td><td>83.7%</td><td>317</td><td>12.2%</td><td>49.8%</td><td>1,265</td><td>18.8%</td><td>61.0%</td><td>17.1%</td></tr>
+          <tr><td>DEER</td><td>80.9%</td><td>2,501</td><td>56.2%</td><td>27.6%</td><td>10,497</td><td><u>71.0%</u></td><td><u>96.9%</u></td><td>2,961</td><td>87.3%</td><td>52.0%</td><td>7,451</td><td>97.4%</td><td>64.5%</td><td>78.0%</td></tr>
+          <tr><td>Thought-Calib</td><td><u>89.8%</u></td><td>3,778</td><td>92.0%</td><td><u>63.3%</u></td><td>9,429</td><td>71.3%</td><td>94.3%</td><td>2,582</td><td>87.1%</td><td><strong>57.3%</strong></td><td>5,757</td><td><u>81.9%</u></td><td><u>76.2%</u></td><td>83.1%</td></tr>
+          <tr><td>Dynasor</td><td>79.6%</td><td>1,702</td><td><strong>42.4%</strong></td><td>61.8%</td><td>7,937</td><td><strong>52.8%</strong></td><td>96.5%</td><td>2,611</td><td><u>82.2%</u></td><td>45.7%</td><td>2,101</td><td><strong>29.1%</strong></td><td>70.9%</td><td><strong>51.6%</strong></td></tr>
+          <tr class="method-ours"><td>Terminator</td><td><strong>90.7%</strong></td><td>2,261</td><td><u>46.8%</u></td><td><strong>74.2%</strong></td><td>10,787</td><td><u>71.0%</u></td><td><strong>97.1%</strong></td><td>2,358</td><td><strong>70.9%</strong></td><td><u>59.6%</u></td><td>6,798</td><td>87.1%</td><td><strong>80.4%</strong></td><td><u>68.9%</u></td></tr>
+
+          <!-- Ministral-3-8B-Reasoning-2512 -->
+          <tr class="model-header"><td colspan="15">Ministral-3-8B-Reasoning-2512</td></tr>
+          <tr><td>Vanilla</td><td>93.5%</td><td>6,212</td><td>100%</td><td>92.6%</td><td>22,124</td><td>100%</td><td>97.1%</td><td>4,367</td><td>100%</td><td>63.4%</td><td>11,765</td><td>100%</td><td>86.6%</td><td>100%</td></tr>
+          <tr><td>NoThinking</td><td>83.2%</td><td>1,908</td><td>28.1%</td><td>43.6%</td><td>7,711</td><td>36.5%</td><td>87.6%</td><td>727</td><td>16.4%</td><td>42.4%</td><td>2,106</td><td>16.0%</td><td>64.2%</td><td>24.3%</td></tr>
+          <tr><td>DEER</td><td>71.0%</td><td>3,791</td><td>60.3%</td><td>67.1%</td><td>17,481</td><td>77.0%</td><td>80.1%</td><td>3,606</td><td><u>84.0%</u></td><td><strong>61.9%</strong></td><td>11,312</td><td>94.1%</td><td>70.0%</td><td>78.9%</td></tr>
+          <tr><td>Thought-Calib</td><td>87.7%</td><td>5,695</td><td>87.8%</td><td><u>83.7%</u></td><td>20,358</td><td>91.2%</td><td>57.9%</td><td>3,536</td><td>87.2%</td><td>50.6%</td><td>7,406</td><td><strong>71.8%</strong></td><td>70.0%</td><td>84.5%</td></tr>
+          <tr><td>Dynasor</td><td><u>88.1%</u></td><td>2,967</td><td><u>56.8%</u></td><td><strong>87.6%</strong></td><td>15,407</td><td><strong>66.3%</strong></td><td><strong>96.9%</strong></td><td>3,931</td><td>88.6%</td><td>57.7%</td><td>9,766</td><td>83.7%</td><td><strong>82.6%</strong></td><td><u>73.9%</u></td></tr>
+          <tr class="method-ours"><td>Terminator</td><td><strong>89.1%</strong></td><td>2,863</td><td><strong>47.8%</strong></td><td>79.1%</td><td>15,748</td><td><u>67.8%</u></td><td><u>96.5%</u></td><td>2,960</td><td><strong>66.6%</strong></td><td><u>58.2%</u></td><td>9,588</td><td><u>77.4%</u></td><td><u>80.7%</u></td><td><strong>64.9%</strong></td></tr>
+
+          <!-- Ministral-3-14B-Reasoning-2512 -->
+          <tr class="model-header"><td colspan="15">Ministral-3-14B-Reasoning-2512</td></tr>
+          <tr><td>Vanilla</td><td>93.0%</td><td>6,385</td><td>100%</td><td>88.1%</td><td>23,694</td><td>100%</td><td>97.5%</td><td>3,918</td><td>100%</td><td>62.9%</td><td>9,539</td><td>100%</td><td>83.4%</td><td>100%</td></tr>
+          <tr><td>NoThinking</td><td>79.1%</td><td>535</td><td>11.7%</td><td>20.5%</td><td>2,413</td><td>13.8%</td><td>88.5%</td><td>528</td><td>14.1%</td><td>42.8%</td><td>570</td><td>6.6%</td><td>57.75%</td><td>11.5%</td></tr>
+          <tr><td>DEER</td><td>69.8%</td><td>4,279</td><td>74.6%</td><td>55.9%</td><td>20,049</td><td>84.9%</td><td>20.5%</td><td>1,684</td><td><strong>46.5%</strong></td><td><u>58.1%</u></td><td>9,185</td><td>95.0%</td><td>51.1%</td><td>75.3%</td></tr>
+          <tr><td>Thought-Calib</td><td><u>87.3%</u></td><td>5,860</td><td>95.9%</td><td>59.4%</td><td>17,763</td><td>79.8%</td><td>45.3%</td><td>3,465</td><td>96.3%</td><td>56.2%</td><td>6,028</td><td><strong>73.8%</strong></td><td>62.1%</td><td>86.5%</td></tr>
+          <tr><td>Dynasor</td><td>86.3%</td><td>3,240</td><td><u>55.5%</u></td><td><u>83.2%</u></td><td>17,920</td><td><u>70.6%</u></td><td><u>94.7%</u></td><td>3,538</td><td>88.9%</td><td>55.9%</td><td>7,917</td><td>85.2%</td><td><u>80.0%</u></td><td><u>75.1%</u></td></tr>
+          <tr class="method-ours"><td>Terminator</td><td><strong>90.2%</strong></td><td>2,946</td><td><strong>43.9%</strong></td><td><strong>84.2%</strong></td><td>15,518</td><td><strong>63.5%</strong></td><td><strong>97.8%</strong></td><td>2,903</td><td><u>71.0%</u></td><td><strong>61.2%</strong></td><td>7,727</td><td><u>76.5%</u></td><td><strong>83.4%</strong></td><td><strong>63.7%</strong></td></tr>
         </tbody>
       </table>
     </div>
-
-    <div class="figure">
-      <img src="assets/pareto_frontier_qwen.png" alt="Pareto frontiers of accuracy versus compression rate across reasoning models and benchmarks">
-      <div class="caption"><strong>Figure 3: Pareto Frontiers.</strong> Accuracy versus compression rate across four reasoning models (Qwen3-8B, Qwen3-14B, Ministral-8B, Ministral-14B) and four benchmarks (MATH-500, AIME25, HumanEval, GPQA). Each point represents a method's accuracy and compression rate, with lower compression rates indicating greater token savings. The dashed line traces the Pareto frontier connecting non-dominated solutions. Terminator consistently achieves strong Pareto efficiency, offering the best accuracy-efficiency tradeoff across models and tasks.</div>
     </div>
 
     <h3>Latency Analysis</h3>
@@ -218,6 +245,16 @@
       </table>
     </div>
 
+    <h3>Hindsight-Optimal Reasoning Length</h3>
+    <p>
+      Since Terminator is trained on hindsight-optimal reasoning length CoTs, it is natural to ask where Terminator lies on the accuracy-compression frontier relative to the ground-truth hindsight-optimal reasoning length. Figure 4 traces test-set accuracy as CoTs are truncated at increasingly early points, forcing the LRM to commit to a final solution and answer. The diamond-shaped markers denote the position where the final answer first appears (i.e., the hindsight-optimal reasoning length). Accuracy stays essentially constant past this point, confirming that reasoning beyond the first answer yields no further gains. Although the hindsight-optimal reasoning length baseline is not achievable by any online method in principle, Terminator lands close to it across all four datasets.
+    </p>
+
+    <div class="figure">
+      <img src="assets/cr_vs_accuracy_per_dataset.png" alt="Accuracy versus compression rate as CoTs are truncated early">
+      <div class="caption"><strong>Figure 4: Effects of Early Reasoning Termination.</strong> Test-set CoTs are evaluated after truncating them at various points via the end-of-thought token and asking the LRM for a final solution and answer. Diamond-shaped markers show the hindsight-optimal answer position (not achievable by any online method); Terminator lands close to optimality on all four datasets.</div>
+    </div>
+
     <a href="#section-nav" class="back-to-nav">↑ Back to sections</a>
   </section>
 
@@ -230,7 +267,7 @@
 
     <div class="figure">
       <img src="assets/terminator.svg" alt="Method diagram">
-      <div class="caption"><strong>Figure 4: Terminator Architecture.</strong> Terminator predicts when the LRM has generated its final answer.</div>
+      <div class="caption"><strong>Figure 5: Terminator Architecture.</strong> Terminator predicts when the LRM has generated its final answer.</div>
     </div>
 
     <details>
@@ -260,6 +297,7 @@
           <li>Count the number of predicted 1s in a sliding window of the most recent predictions (the window size is 10 by default)</li>
           <li>If the majority (>5 if the window size is 10) of predictions are 1, then the CoT is terminated</li>
         </ul>
+        Please see the appendix of our paper for further details on the inference procedure and ablations on the threshold and window size hyperparameters.
       </div>
     </details>
 
@@ -282,7 +320,46 @@
 
         <div class="figure">
           <img src="assets/scatter_tokens_1xn_diagonal_all.png" alt="Token usage frequency shift before and after final answer">
-          <div class="caption"><strong>Figure 5: Token Usage Frequency Shift.</strong> "Thinking token" rates change depending on whether the final answer has been generated. Dot size reflects relative CoT length.</div>
+          <div class="caption"><strong>Figure 6: Token Usage Frequency Shift.</strong> "Thinking token" rates change depending on whether the final answer has been generated. Dot size reflects relative CoT length.</div>
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary>Terminator Recovers Early-Exit Signals</summary>
+      <div class="details-content">
+        <p>
+          Our motivation (Figure 2) showed that the first arrival of the final answer is marked by a confidence spike under event-locked averaging, and by a shift in "thinking token" usage. A natural question is whether Terminator, trained only on the LRM's hidden states, recovers these same signals using its own predicted exit positions, rather than the ground-truth answer positions.
+        </p>
+        <p>
+          Figure 7 mirrors the event-locked averaging of Figure 2, but uses all test samples rather than 3,200 randomly selected training samples. Its left and center panels show the averaged Token-Confidence using ground-truth and Terminator-predicted answer positions, respectively. The two are nearly identical, and the right panel shows that the prediction errors are tightly concentrated near zero, with a median difference of 7 tokens.
+        </p>
+        <div class="figure">
+          <img src="assets/timeseries_comparison_1x3.png" alt="Event-locked averaging using ground-truth versus Terminator-predicted exit positions">
+          <div class="caption"><strong>Figure 7: Terminator Recovers Event-Locked Average Spiking.</strong> The exit positions predicted by Terminator (center) recover spiking behavior in the event-locked averaged Token-Confidence similar to the ground-truth answer positions (left). The histogram of differences between exit positions (right, log-scaled y-axis) shows Terminator's predictions are close to ground-truth.</div>
+        </div>
+        <p>
+          Figure 8 parallels the "thinking token" analysis by overlaying scatter plots computed from ground-truth and predicted answer positions. The inset axes show nearly identical above-diagonal percentages, indicating that Terminator preserves the same before/after token usage biases. Together, these results show that training Terminator on the LRM's hidden states alone is sufficient to independently recover the early-exit signals that motivate our approach.
+        </p>
+        <div class="figure">
+          <img src="assets/scatter_overlay_1x3.png" alt="Thinking-token scatter plots using ground-truth versus Terminator-predicted exit positions">
+          <div class="caption"><strong>Figure 8: Terminator Token Usage Biases.</strong> The exit positions predicted by Terminator recover the same biases in "thinking token" occurrence rates as the ground-truth answer positions. The inset axes show the percentage of dots above the diagonal for ground-truth and Terminator answer positions.</div>
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary>Out-of-Distribution Generalization</summary>
+      <div class="details-content">
+        <p>
+          Our main results train Terminator on a mix of all four training tasks. To assess out-of-distribution (OOD) generalization, we instead train a separate probe on each individual task and evaluate it on every test set. Figure 9 reports compression rate (left) and accuracy (right), with rows denoting the training dataset and columns the test dataset.
+        </p>
+        <p>
+          Compression is best in-distribution (along the diagonal), but accuracy does not always follow the same pattern. For example, training on OpenScience yields the lowest GPQA accuracy despite GPQA being in-distribution, whereas training on the OOD OpenCoder-SFT data improves GPQA accuracy but worsens its compression to 96%. In short, OOD evaluation can slightly improve accuracy but often delays exiting, reducing token savings on data not seen during training.
+        </p>
+        <div class="figure">
+          <img src="assets/heatmaps_compression_accuracy.png" alt="OOD compression rate and accuracy heatmaps across training and evaluation datasets">
+          <div class="caption"><strong>Figure 9: OOD Performance of Terminator.</strong> The best accuracy-compression trade-off is achieved when the evaluation set is in-distribution with the training set. Compression rate (left) and accuracy (right) for Qwen3-8B; training datasets along the rows, evaluation sets along the columns. Each training dataset has an in-domain evaluation set: MATH&rarr;MATH-500, AIME 1983&ndash;2024&rarr;AIME 2025, OpenCoder-SFT&rarr;HumanEval, OpenScience&rarr;GPQA.</div>
         </div>
       </div>
     </details>
@@ -295,14 +372,14 @@
         </p>
         <div class="figure">
           <img src="assets/individual_samples_2x2_math-500.png" alt="Predicted probabilities for four MATH-500 samples">
-          <div class="caption"><strong>Figure 6: Predicted Probabilities for MATH-500.</strong> Terminator's predicted probability stream for early-exiting on four randomly chosen samples from MATH-500.</div>
+          <div class="caption"><strong>Figure 10: Predicted Probabilities for MATH-500.</strong> Terminator's predicted probability stream for early-exiting on four randomly chosen samples from MATH-500.</div>
         </div>
         <p>
-          Figure 7 zooms in on a single MATH-500 sample, showing the full CoT with Terminator's predicted probabilities overlaid. The predicted probability remains low throughout the reasoning phase and rises sharply once the final answer has been generated, triggering the early exit.
+          Figure 11 zooms in on a single MATH-500 sample, showing the full CoT with Terminator's predicted probabilities overlaid. The predicted probability remains low throughout the reasoning phase and rises sharply once the final answer has been generated, triggering the early exit.
         </p>
         <div class="figure">
           <img src="assets/cot_math_sample_77.png" alt="Predicted probabilities for a single MATH-500 sample">
-          <div class="caption"><strong>Figure 7: Predicted Probabilities for MATH-500.</strong> Terminator's predicted probabilities for early-exit on a randomly chosen sample from MATH-500. The beginning and the end are truncated for better visibility.</div>
+          <div class="caption"><strong>Figure 11: Predicted Probabilities for MATH-500.</strong> Terminator's predicted probabilities for early-exit on a randomly chosen sample from MATH-500. The beginning and the end are truncated for better visibility.</div>
         </div>
       </div>
     </details>
@@ -315,14 +392,14 @@
         </p>
         <div class="figure">
           <img src="assets/individual_samples_2x2_aime_2025.png" alt="Predicted probabilities for four AIME 2025 samples">
-          <div class="caption"><strong>Figure 8: Predicted Probabilities for AIME 2025.</strong> Terminator's predicted probability stream for early-exiting on four randomly chosen samples from AIME 2025.</div>
+          <div class="caption"><strong>Figure 12: Predicted Probabilities for AIME 2025.</strong> Terminator's predicted probability stream for early-exiting on four randomly chosen samples from AIME 2025.</div>
         </div>
         <p>
-          Figure 9 shows a case where Terminator struggles to find a clean exit position. The predicted probabilities oscillate near the threshold rather than making a decisive jump, reflecting the difficulty of the underlying problem. Despite this, Terminator still achieves strong performance on AIME 2025 overall.
+          Figure 13 shows a case where Terminator struggles to find a clean exit position. The predicted probabilities oscillate near the threshold rather than making a decisive jump, reflecting the difficulty of the underlying problem. Despite this, Terminator still achieves strong performance on AIME 2025 overall.
         </p>
         <div class="figure">
           <img src="assets/cot_aime_sample_508.png" alt="Predicted probabilities for a single AIME 2025 sample">
-          <div class="caption"><strong>Figure 9: Predicted Probabilities for AIME 2025.</strong> Terminator's predicted probabilities for early-exit on a randomly chosen sample from AIME 2025. The beginning and the end are truncated for better visibility.</div>
+          <div class="caption"><strong>Figure 13: Predicted Probabilities for AIME 2025.</strong> Terminator's predicted probabilities for early-exit on a randomly chosen sample from AIME 2025. The beginning and the end are truncated for better visibility.</div>
         </div>
       </div>
     </details>
